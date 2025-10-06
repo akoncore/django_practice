@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from rest_framework import viewsets,status
-from .models import Faculty,Student,Teacher,Dean,Lectures,Lessons,Practice,Post
+from .models import Faculty,Student,Teacher,Dean,Lectures,Lessons,Practice,Post,Schedule,DAY_CHOICES
 from rest_framework import permissions
 from .serializers import (RegisterSerializers, DeanSerializers,FacultySerializers,PostSerializers,
 FacultySerializers,LessonsSerializers,TeacherSerializers,TeacherLessonsSerializers,LecturesSerializers,
-PracticeSerializers)
+PracticeSerializers,StudentSerializers,ScheduleSerializer)
 
 from rest_framework.response import Response
 from django.contrib.auth.models import User
@@ -104,13 +104,61 @@ class TeacherView(viewsets.ModelViewSet):
             "practice":serializer1.data
         })
         
-        
+
+class StudentView (viewsets.ModelViewSet):
+    queryset = Student.objects.all()
+    serializer_class = StudentSerializers
+    
     
     
 
+
+
+class PracticeView(viewsets.ModelViewSet):
+    queryset = Practice.objects.all()
+    serializer_class = PracticeSerializers
+    
+    @action(detail=True , methods = ["get"])
+    def students(self,request,pk=None):
+        practices = self.get_object()
+        students = practices.students.all()
+        serializer = StudentSerializers(students, many=True)
+        return Response(serializer.data)
+    
+    
+    
+    
+    
+class LecturesView(viewsets.ModelViewSet):
+    queryset = Lectures.objects.all()
+    serializer_class = LecturesSerializers
+    
+
+class ScheduleView(viewsets.ModelViewSet):
+    queryset = Schedule.objects.all()
+    serializer_class = ScheduleSerializer
+    
+    def list(self,request,*args,**kwargs):
+        week_days = dict(DAY_CHOICES)
+        week_schedule = {}
         
+        all_practice = Practice.objects.all()
+        all_lectures = Lectures.objects.all()
+        
+        for key,lavel in week_days.items():
+            practices = all_practice.filter(day=key)
+            lectures = all_lectures.filter(day=key)
+            
+            if practices.exists() or lectures.exists():
+                week_schedule[lavel]={
+                    "practices":PracticeSerializers(practices,many=True).data,
+                    "lectures":LecturesSerializers(lectures,many=True).data
+                }
+        return Response(week_schedule)
     
     
     
+    
+  
 
     
