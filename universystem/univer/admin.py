@@ -1,12 +1,11 @@
 from django.contrib import admin
-from .models import Dean,Faculty,Lessons,Student,Teacher,Lectures,Practice,Post
+
+from .models import Dean,Faculty,Lessons,Student,Teacher,Lectures,Practice,Post,Schedule
 
 # Register your models here# .
-admin.site.register(Dean)
-admin.site.register(Faculty)
-admin.site.register(Lessons)
-admin.site.register(Student)
-admin.site.register(Teacher)
-admin.site.register(Lectures)
-admin.site.register(Practice)
-admin.site.register(Post)
+@admin.register(Dean)
+class DeanAdmin(admin.ModelAdmin):
+    list_display = ("name","education",)
+    list_display_links = ("name",)
+    list_filter = ("education",)
+

@@ -1,3 +1,4 @@
+from audioop import reverse
 from django.db import models
 from django.core.exceptions import ValidationError
 
@@ -85,12 +86,23 @@ TIME_CHOICES = [
     
 ]
     
+DAY_CHOICES = [ 
+        ('Mon', 'Monday'),
+        ('Tue', 'Tuesday'),
+        ('Wed', 'Wednesday'),
+        ('Thu', 'Thursday'),
+        ('Fri', 'Friday'),
+        ('Sat', 'Saturday'),
+        ('Sun', 'Sunday'),
+    ]
+    
 class Lectures(models.Model):
     
     lessons_name=models.ForeignKey(Lessons,related_name="lessons_name", on_delete=models.CASCADE)
-    teacher = models.ForeignKey(Teacher,related_name="teachers", on_delete=models.CASCADE)
+    teacher = models.ForeignKey(Teacher,related_name="lecture", on_delete=models.CASCADE)
     time = models.CharField( max_length=50,choices = TIME_CHOICES)
     room = models.IntegerField()
+    day = models.CharField(choices = DAY_CHOICES,max_length = 3)
     
 
     class Meta:
@@ -101,29 +113,6 @@ class Lectures(models.Model):
     def get_absolute_url(self):
         return reverse("_detail", kwargs={"pk": self.pk})
     
-class Practice(models.Model):
-    lesson_name = models.ForeignKey(Lessons,related_name="practices", on_delete=models.CASCADE)
-    teacher = models.ForeignKey(Teacher, related_name="teacher_practice", on_delete=models.CASCADE)
-    time = models.CharField( max_length=50,choices=TIME_CHOICES)
-    room = models.IntegerField()
-    
-
-    class Meta:
-        verbose_name = ("")
-        verbose_name_plural = ("Practice")
-
-    def __frg__(self):
-        return self.lesson_name
-
-    def get_absolute_url(self):
-        return reverse("_detail", kwargs={"pk": self.pk})
-    
-    def clean(self):
-        if Lectures.objects.filter(time=self.time).exists():
-            raise ValidationError("TIME ERROR")
-        if Lectures.objects.filter(room=self.room).exists():
-            raise VAlidationError("Romm number error")
-
 
     
 class Student(models.Model):
@@ -139,7 +128,6 @@ class Student(models.Model):
     ]
     
     name = models.CharField( max_length=50)
-    course = models.IntegerField()
     type_of_student=models.CharField( max_length=50,choices = type_choices)
     faculty = models.ForeignKey(Faculty,related_name="facultyies", on_delete=models.CASCADE)
     
@@ -153,6 +141,32 @@ class Student(models.Model):
 
     def get_absolute_url(self):
         return reverse("_detail", kwargs={"pk": self.pk})
+
+
+class Practice(models.Model):
+    lesson_name = models.ForeignKey(Lessons,related_name="practices", on_delete=models.CASCADE)
+    teacher = models.ForeignKey(Teacher, related_name="practice", on_delete=models.CASCADE)
+    time = models.CharField( max_length=50,choices=TIME_CHOICES)
+    room = models.IntegerField()
+    students = models.ManyToManyField(Student, related_name = 'students')
+    day = models.CharField(max_length = 3, choices = DAY_CHOICES)
+    
+
+    class Meta:
+        verbose_name = ("")
+        verbose_name_plural = ("Practice")
+
+    
+    def get_absolute_url(self):
+        return reverse("_detail", kwargs={"pk": self.pk})
+    
+    def clean(self):
+        if Lectures.objects.filter(time=self.time ,day = self.day).exists():
+            raise ValidationError("TIME ERROR")
+        if Lectures.objects.filter(room=self.room).exists():
+            raise ValidationError("Romm number error")
+    def __str__(self):
+        return self.lesson_name.title
 
 
 class Post(models.Model):
@@ -174,3 +188,12 @@ class Post(models.Model):
     def __str__(self):
         return self.title
             
+
+class Schedule(models.Model):
+   
+    practice = models.ManyToManyField(Practice,related_name = "schulde")
+    lecture = models.ManyToManyField(Lectures,related_name =  "schulde")
+    
+    
+    
+    
