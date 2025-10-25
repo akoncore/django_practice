@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 
 # Create your models here.
 class Dean(models.Model):
+    id = models.IntegerField(primary_key=True)
     name = models.CharField( max_length=50)
     education = models.CharField( max_length=50)
     is_teacher = models.BooleanField(default=False)
