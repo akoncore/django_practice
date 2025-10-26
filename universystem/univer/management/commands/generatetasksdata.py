@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Any
 import random
+from univer.models import TIME_CHOICES,DAY_CHOICES
 
 from random import choice,choices,randint,sample
 from django.core.management.base import BaseCommand
@@ -9,7 +10,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 
 from univer.models import (Dean,Faculty
-,Teacher,Lessons,Lectures)
+,Teacher,Lessons,Lectures,Practice,Student)
 
 class Command(BaseCommand):
     
@@ -57,7 +58,29 @@ class Command(BaseCommand):
         "MUIT",
         "NU"
     )
-    
+    STUDENT_NAME = (
+        "Айдана Нұржан",
+        "Аружан Ермек",
+        "Бекзат Данияр",
+        "Дастан Ербол",
+        "Диана Саян",
+        "Айгерім Қайрат",
+        "Мадина Арман",
+        "Ернар Самат",
+        "Нұрсұлтан Әли",
+        "Әсел Руслан",
+        "Алина Бауыржан",
+        "Жандос Алмат",
+        "Меруерт Айдын",
+        "Руслан Әсет",
+        "Гүлнұр Бекен",
+        "Айбек Талғат",
+        "Аяжан Ерлан",
+        "Арсен Данияр",
+        "Алия Нұрлан",
+        "Ерасыл Қайсар"
+    )
+
     def __generate_users(self, user_count=20):
         USER_PASSWORD = make_password("12345")
         created_user:list[User] = []
@@ -83,9 +106,11 @@ class Command(BaseCommand):
     def __generate_dean(self,dean_count = 20):
         created_dean:list[Dean] = []
         
-        i:int
-        for i in range(dean_count):
-            name = " ".join(choices(self.NAME_WORDS,k=1,))
+        if dean_count>len(self.NAME_WORDS):
+            dean_count = len(self.NAME_WORDS)
+            
+        dean_names = sample(self.NAME_WORDS, k=dean_count)
+        for name in dean_names:
             education = randint(10,15)
             is_teacher = True
             created_dean.append(
@@ -118,7 +143,7 @@ class Command(BaseCommand):
                     dean = dean
                 )
             )
-        Faculty.objects.bulk_create(created_faculty,ignore_conflicts=True,unique_fields=["dean",])
+        Faculty.objects.bulk_create(created_faculty,ignore_conflicts=True)
         
         self.stdout.write(
             self.style.SUCCESS(
@@ -148,7 +173,7 @@ class Command(BaseCommand):
                     teacher_type =teacher_type
                 )
             )
-        Teacher.objects.bulk_create(created_teacher,ignore_conflicts=True,unique_fields=["name"])
+        Teacher.objects.bulk_create(created_teacher,ignore_conflicts=True)
         self.stdout.write(
             self.style.SUCCESS(
                 f"Created {len(teacher_names)} teacher"
@@ -174,21 +199,19 @@ class Command(BaseCommand):
         
         created_lessons:list[Lessons] = []
         exited_faculty:QuerySet[Faculty] = Faculty.objects.all()
-        exited_teacher:QuerySet[Teacher] = Teacher.objects.all()
         
         titles = list(LESSONS.keys())[:lesson_count]
         
         for title in titles:
             description = LESSONS[title]
             faculty:Faculty = choice(exited_faculty)
-            teacher:Teacher = choice(exited_teacher)
+            
             
             created_lessons.append(
                 Lessons(
                     title = title,
                     description = description,
                     faculty = faculty,
-                    teacher = teacher
                 )
             )
         Lessons.objects.bulk_create(created_lessons,ignore_conflicts=True)
@@ -199,10 +222,87 @@ class Command(BaseCommand):
         )
     
     
-    #def __generate_lectors(self,lector_count =12)->None:
-        #created_lectors:list[Lectures] = []
-        #xited_lesson_name:QuerySet[Lectures] = Lectures.objects.all()
+    def __generate_lectures(self,lector_count =25)->None:
+        created_lectors:list[Lectures] = []
+        exited_lesson_name:QuerySet[Lessons] = Lessons.objects.all()
+        exited_teacher_name:QuerySet[Teacher] = Teacher.objects.all()
         
+        for i in range(lector_count):
+            lessons_name:Lessons = choice(exited_lesson_name)
+            teacher:Teacher = choice(exited_teacher_name)
+            time = random.choice([choice[0] for choice in TIME_CHOICES])
+            room = randint(100,400)
+            day = random.choice([choice[0] for choice in DAY_CHOICES])
+            created_lectors.append(
+                Lectures(
+                    lessons_name = lessons_name,
+                    teacher = teacher,
+                    time=time,
+                    room = room,
+                    day = day
+                )
+            )
+        Lectures.objects.bulk_create(created_lectors,ignore_conflicts=True)
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Created lectures"
+            )
+        )
+    
+    
+    def __generate_practice(self,practice_count = 24):
+        created_practice:list[Practice] = []
+        exited_lesson_name:QuerySet[Lessons] = Lessons.objects.all()
+        exited_teacher_name:QuerySet[Teacher] = Teacher.objects.all()
+        student:QuerySet[Student] = Student.objects.all()
+        
+        for i in range(practice_count):
+            lesson_name:Lessons = choice(exited_lesson_name)
+            teacher:Teacher = choice(exited_teacher_name)
+            time = random.choice([choice[0] for choice in TIME_CHOICES])
+            room = randint(100,400)
+            day = random.choice([choice[0] for choice in DAY_CHOICES])
+            students:Student = choice(student)
+            created_practice.append(
+                Practice(
+                    lesson_name = lesson_name,
+                    teacher = teacher,
+                    day = day,
+                    time = time,
+                    room = room,
+                    students = students,
+                    
+                )
+            )
+        Practice.objects.bulk_create(created_practice,ignore_conflicts=True)
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Created practice"
+            )
+        )
+    
+    def __generate_student(self,student_count=20)->None:
+        created_student:list[Student] = []
+        exited_faculty:QuerySet[Faculty] = Faculty.objects.all()
+        
+        if student_count > len(self.STUDENT_NAME):
+            student_count = len(self.STUDENT_NAME)
+            
+        student_names = sample(self.STUDENT_NAME,k=student_count)
+        
+        for name in student_names:
+            type_of_student = random.choice([choice[0] for choice in Student.type_choices])
+            faculty:Faculty = choice(exited_faculty)
+            created_student.append(
+                Student(
+                    name = name,
+                    type_of_student = type_of_student,
+                    faculty = faculty
+                )
+            )
+        Student.objects.bulk_create(created_student,ignore_conflicts=True)
+        self.stdout.write(self.style.SUCCESS(f"Created student"))
+
     
     def handle(self, *args:tuple[Any,...], **kwargs:dict[str,Any])->None:
         start_time:datetime = datetime.now()
@@ -211,7 +311,10 @@ class Command(BaseCommand):
         #self.__generate_users(user_count=20)
         #self.__generate_faculty(faculty_count=3)
         #self.__generate_teacher(teacher_count=20)
-        self.__generate_lessons(lesson_count=12)
+        #self.__generate_lessons(lesson_count=12)
+        #self.__generate_lectures(lector_count=24)
+        #self.__generate_student(student_count=20)
+        self.__generate_practice(practice_count=24)
         
         self.stdout.write(
             "The whole process to generate data took: {} seconds".format(

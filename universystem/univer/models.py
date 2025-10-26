@@ -56,7 +56,7 @@ class Lessons(models.Model):
     title = models.CharField(max_length=50)
     description = models.TextField()
     faculty = models.ForeignKey(Faculty,related_name="facultyLess", on_delete=models.CASCADE)
-    teacher = models.ForeignKey(Teacher,related_name="lessons",on_delete=models.CASCADE)
+    
     
 
     class Meta:
