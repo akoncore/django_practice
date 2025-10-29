@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from rest_framework.decorators import action
 # Create your views here.
+
 class RegisterView(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = RegisterSerializers
@@ -20,6 +21,7 @@ class RegisterView(viewsets.ModelViewSet):
             serializer.save()
             return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class DeanView(viewsets.ModelViewSet):
     queryset = Dean.objects.all()
@@ -42,6 +44,7 @@ class DeanView(viewsets.ModelViewSet):
         dean = self.get_object()
         faculty = dean.faculty
         return Response({"name":faculty.name})
+  
         
 class FacultyView(viewsets.ModelViewSet):
     queryset=Faculty.objects.all()
@@ -53,6 +56,7 @@ class FacultyView(viewsets.ModelViewSet):
         faculty = self.get_object()
         dean = faculty.dean
         return Response({"dean_name":dean.name})
+
 
 class LessonsView(viewsets.ModelViewSet):
     queryset = Lessons.objects.all()
@@ -110,13 +114,24 @@ class StudentView (viewsets.ModelViewSet):
     serializer_class = StudentSerializers
     
     
-    
-
-
-
 class PracticeView(viewsets.ModelViewSet):
     queryset = Practice.objects.all()
     serializer_class = PracticeSerializers
+    
+    def list(self,request):
+        week_days = dict(DAY_CHOICES)
+        week_schulde = {}
+        
+        all_practices = Practice.objects.all()
+        
+        for key,lavel in week_days.items():
+            practices = all_practices.filter(day = key)
+            
+            if practices.exists():
+                week_schulde[lavel]={
+                    "Practices":PracticeSerializers(practices,many=True).data
+                }
+        return Response(week_schulde)      
     
     @action(detail=True , methods = ["get"])
     def students(self,request,pk=None):
@@ -125,10 +140,7 @@ class PracticeView(viewsets.ModelViewSet):
         serializer = StudentSerializers(students, many=True)
         return Response(serializer.data)
     
-    
-    
-    
-    
+   
 class LecturesView(viewsets.ModelViewSet):
     queryset = Lectures.objects.all()
     serializer_class = LecturesSerializers
@@ -156,9 +168,4 @@ class ScheduleView(viewsets.ModelViewSet):
                 }
         return Response(week_schedule)
     
-    
-    
-    
-  
-
     
