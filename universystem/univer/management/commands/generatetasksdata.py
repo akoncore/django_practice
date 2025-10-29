@@ -262,7 +262,6 @@ class Command(BaseCommand):
             time = random.choice([choice[0] for choice in TIME_CHOICES])
             room = randint(100,400)
             day = random.choice([choice[0] for choice in DAY_CHOICES])
-            students:Student = choice(student)
             created_practice.append(
                 Practice(
                     lesson_name = lesson_name,
@@ -270,11 +269,15 @@ class Command(BaseCommand):
                     day = day,
                     time = time,
                     room = room,
-                    students = students,
                     
                 )
             )
         Practice.objects.bulk_create(created_practice,ignore_conflicts=True)
+        all_practices:QuerySet[Practice] = Practice.objects.all()
+        
+        for practice in all_practices:
+            students_add = choices(student,k=randint(1,10))
+            practice.students.set(students_add) 
         self.stdout.write(
             self.style.SUCCESS(
                 f"Created practice"

@@ -47,6 +47,25 @@ class StudentAdmin(admin.ModelAdmin):
 
 @admin.register(Practice)
 class PracticeAdmin(admin.ModelAdmin):
-    list_display = ("lesson_name","teacher","day","time","room")
+    list_display = ("lesson_name","teacher","day","time","room",)
     list_display_links = ("lesson_name",)
     list_filter = ("day","lesson_name",)
+    
+@admin.register(Post)
+class PostAdmin(admin.ModelAdmin):
+    list_display = ("title","content","author_type",)
+    list_filter = ("author_type",)
+
+
+@admin.register(Schedule)
+class ScheduleAdmin(admin.ModelAdmin):
+    list_display = ("get_practice","get_lecture",)
+    
+    def get_practice(self,obj):
+        return " ".join([f"{p.lesson_name} {p.teacher} П {p.room} ({p.day},{p.time})" for p in obj.practice.all()])
+    get_practice.short_description = "Practices"
+    
+    def get_lecture(self,obj):
+        return " ".join([f"{p.lessons_name} {p.teacher} Л{p.room} ({p.day},{p.time})" for p in obj.lecture.all()])
+    get_lecture.short_description = "Lectures"
+    

@@ -149,7 +149,7 @@ class Practice(models.Model):
     teacher = models.ForeignKey(Teacher, related_name="practice", on_delete=models.CASCADE)
     time = models.CharField( max_length=50,choices=TIME_CHOICES)
     room = models.IntegerField()
-    students = models.ManyToManyField(Student, related_name = 'students')
+    students = models.ManyToManyField(Student, related_name = 'studentes')
     day = models.CharField(max_length = 3, choices = DAY_CHOICES)
     
 
@@ -181,8 +181,6 @@ class Post(models.Model):
     
     author_type = models.CharField(max_length=155,choices = AUTHOR_CHOICES)
     
-    teacher_post = models.ForeignKey(Teacher,on_delete=models.CASCADE,null=True,blank=True,related_name='posts')
-    dean_post = models.ForeignKey(Dean,on_delete=models.CASCADE,null=True,blank=True,related_name='dean_posts')
    
      
    
@@ -193,7 +191,7 @@ class Post(models.Model):
 class Schedule(models.Model):
    
     practice = models.ManyToManyField(Practice,related_name = "schulde")
-    lecture = models.ManyToManyField(Lectures,related_name =  "schulde")
+    lecture = models.ManyToManyField(Lectures,related_name =  "schulde1")
     
     
     
